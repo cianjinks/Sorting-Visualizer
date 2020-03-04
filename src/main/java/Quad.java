@@ -6,16 +6,21 @@ public class Quad {
 
     private Vertex v0, v1, v2, v3;
     private float x, y, width, height;
+    private float r, g, b, a;
 
-    public Quad(float x, float y, float width, float height) {
+    public Quad(float x, float y, float width, float height, float r, float g, float b, float a) {
         this.x = x;
         this.y = y;
         this.width = width;
         this.height = height;
-        v0 = new Vertex(); v0.setXYZW(x, y, 0f, 1.0f); v0.setRGBA(0.0f, 1.0f, 0.0f, 1.0f);
-        v1 = new Vertex(); v1.setXYZW(x, y + height, 0f, 1.0f); v1.setRGBA(0.0f, 1.0f, 0.0f, 1.0f);
-        v2 = new Vertex(); v2.setXYZW( x + width,y + height, 0f, 1.0f); v2.setRGBA(0.0f, 1.0f, 0.0f, 1.0f);
-        v3 = new Vertex(); v3.setXYZW( x + width, y, 0f, 1.0f); v3.setRGBA(0.0f, 1.0f, 0.0f, 1.0f);
+        this.r = r;
+        this.g = g;
+        this.b = b;
+        this.a = a;
+        v0 = new Vertex(); v0.setXYZW(x, y, 0f, 1.0f); v0.setRGBA(r, g, b, a);
+        v1 = new Vertex(); v1.setXYZW(x, y + height, 0f, 1.0f); v1.setRGBA(r, g, b, a);
+        v2 = new Vertex(); v2.setXYZW( x + width,y + height, 0f, 1.0f); v2.setRGBA(r, g, b, a);
+        v3 = new Vertex(); v3.setXYZW( x + width, y, 0f, 1.0f); v3.setRGBA(r, g, b, a);
         indicesCount += indicesPerQuad;
     }
 
@@ -35,23 +40,50 @@ public class Quad {
         v3.setXYZW( x + width, y, 0f, 1.0f);
     }
 
+    public void setColor(float r, float g, float b, float a) {
+        this.r = r;
+        this.g = g;
+        this.b = b;
+        this.a = a;
+        v0.setRGBA(r, g, b, a);
+        v1.setRGBA(r, g, b, a);
+        v2.setRGBA(r, g, b, a);
+        v3.setRGBA(r, g, b, a);
+    }
+
     public Vertex[] getVertices() {
         return new Vertex[] {v0, v1, v2, v3};
     }
 
     public float getX() {
-        return this.x;
+        return x;
     }
 
     public float getY() {
-        return this.y;
+        return y;
+    }
+
+    public float getR() {
+        return r;
+    }
+
+    public float getG() {
+        return g;
+    }
+
+    public float getB() {
+        return b;
+    }
+
+    public float getA() {
+        return a;
     }
 
     public float getWidth() {
-        return this.width;
+        return width;
     }
 
     public float getHeight() {
-        return this.height;
+        return height;
     }
 }

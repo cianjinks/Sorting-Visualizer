@@ -1,11 +1,11 @@
 import com.sun.tools.javac.util.ArrayUtils;
 import org.joml.Matrix4f;
+import org.joml.Vector4f;
 import org.lwjgl.BufferUtils;
 import org.lwjgl.glfw.*;
 import org.lwjgl.opengl.*;
 import org.lwjgl.system.*;
 
-import java.lang.reflect.Array;
 import java.nio.*;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -26,6 +26,15 @@ public class Application {
     public ArrayList<Quad> quads;
     public ArrayList<Integer> barHeights;
     public static String WINDOW_TITLE = "Batch Renderer";
+
+    // Sorting
+    private static Vector4f BASE_COLOR = new Vector4f(0.0f, 1.0f, 0.0f, 1.0f);
+    private static Vector4f SELECTION_COLOR = new Vector4f(1.0f, 1.0f, 0.0f, 1.0f);
+    private static Vector4f COMPLETE_COLOR = new Vector4f(1.0f, 1.0f, 1.0f, 1.0f);
+    private boolean sorting = false;
+    private boolean bubble = false;
+    private int sorti = 0;
+    private int sortj = 0;
 
     public void run() {
 
@@ -66,14 +75,22 @@ public class Application {
                 glfwSetWindowShouldClose(window, true);
             }
             if(key == GLFW_KEY_A && action == GLFW_RELEASE) {
-                for(int i = 0; i < barHeights.size()-1; i++) {
-                    for(int j = 0; j < barHeights.size() - i - 1; j++) {
-                        if(barHeights.get(j) > barHeights.get(j+1)) {
-                            Collections.swap(barHeights, j, j+1);
-                        }
+                // TODO: Broken
+                if(!sorting) {
+                    barHeights.clear();
+                    Random random = new Random();
+                    int numBars = random.nextInt(96) + 5;
+                    for(int index = 0; index < numBars; index++) {
+                        barHeights.add(Math.round(random.nextFloat() * 500.0f));
                     }
+                    setupQuads();
                 }
-                setupQuads();
+            }
+            if(key == GLFW_KEY_B && action == GLFW_RELEASE) {
+                if(!sorting && !bubble) {
+                    sorting = true;
+                    bubble = true;
+                }
             }
         });
 
@@ -175,6 +192,30 @@ public class Application {
         while ( !glfwWindowShouldClose(window) ) {
             glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); // clear the framebuffer
 
+            // Sorting Algorithms
+            if(sorting) {
+                // Bubble Sort
+                if(bubble) {
+                    if(sorti < barHeights.size() - 1) {
+                        if(sortj < barHeights.size() - sorti - 1) {
+                            if(barHeights.get(sortj) > barHeights.get(sortj + 1)) {
+                                Collections.swap(barHeights, sortj, sortj+1);
+                            }
+                            sortj++;
+                        } else {
+                            sortj = 0;
+                            sorti++;
+                        }
+                        // System.out.println("Heights: " + barHeights.size() + " I: " + sorti + " J: " + sortj);
+                        setupQuads(sortj, sortj+1);
+                    } else {
+                        sorting = false;
+                        bubble = false;
+                        System.out.println("Bubble Sort Complete");
+                    }
+                }
+            }
+
             // VBO (Vertex Buffer Object)
             Vertex[] vertices = null;
             for(int quad = 0; quad < quads.size(); quad++) {
@@ -223,6 +264,23 @@ public class Application {
         new Application().run();
     }
 
+    public void setupQuads(int indexOne, int indexTwo) {
+        quads.clear();
+        for(int index = 0; index < barHeights.size(); index++) {
+            float domain = 800.0f;
+            float cutoff = 240.0f;
+            float width = (domain / barHeights.size()) - 0.2f * (domain / barHeights.size());
+            float height = barHeights.get(index);
+            float x = cutoff + ((domain / barHeights.size()) * index);
+            float y = 0.0f;
+            Quad quad = new Quad(x, y, width, height, BASE_COLOR.x, BASE_COLOR.y, BASE_COLOR.z, BASE_COLOR.w);
+            if(index == indexOne || index == indexTwo) {
+                quad.setColor(SELECTION_COLOR.x, SELECTION_COLOR.y, SELECTION_COLOR.z, SELECTION_COLOR.w);
+            }
+            quads.add(quad);
+        }
+    }
+
     public void setupQuads() {
         quads.clear();
         for(int index = 0; index < barHeights.size(); index++) {
@@ -232,7 +290,7 @@ public class Application {
             float height = barHeights.get(index);
             float x = cutoff + ((domain / barHeights.size()) * index);
             float y = 0.0f;
-            Quad quad = new Quad(x, y, width, height);
+            Quad quad = new Quad(x, y, width, height, BASE_COLOR.x, BASE_COLOR.y, BASE_COLOR.z, BASE_COLOR.w);
             quads.add(quad);
         }
     }
