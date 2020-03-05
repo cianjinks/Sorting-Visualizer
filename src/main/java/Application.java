@@ -25,12 +25,13 @@ public class Application {
     public static int WINDOW_HEIGHT = 720;
     public ArrayList<Quad> quads;
     public ArrayList<Integer> barHeights;
+    public ArrayList<Integer> completed;
     public static String WINDOW_TITLE = "Batch Renderer";
 
     // Sorting
     private static Vector4f BASE_COLOR = new Vector4f(0.0f, 1.0f, 0.0f, 1.0f);
     private static Vector4f SELECTION_COLOR = new Vector4f(1.0f, 1.0f, 0.0f, 1.0f);
-    private static Vector4f COMPLETE_COLOR = new Vector4f(1.0f, 1.0f, 1.0f, 1.0f);
+    private static Vector4f COMPLETE_COLOR = new Vector4f(0.5f, 0.0f, 0.5f, 1.0f);
     private boolean sorting = false;
     private boolean bubble = false;
     private int sorti = 0;
@@ -77,13 +78,13 @@ public class Application {
             if(key == GLFW_KEY_A && action == GLFW_RELEASE) {
                 // TODO: Broken
                 if(!sorting) {
-                    barHeights.clear();
+                    /**barHeights.clear();
                     Random random = new Random();
                     int numBars = random.nextInt(96) + 5;
                     for(int index = 0; index < numBars; index++) {
                         barHeights.add(Math.round(random.nextFloat() * 500.0f));
-                    }
-                    setupQuads();
+                    }**/
+                    resetBars();
                 }
             }
             if(key == GLFW_KEY_B && action == GLFW_RELEASE) {
@@ -188,6 +189,7 @@ public class Application {
 
         Matrix4f mvp = new Matrix4f().ortho(0.0f, 1280.0f, 0.0f, 720.0f, -1.0f, 1.0f);
 
+        completed = new ArrayList<Integer>();
 
         while ( !glfwWindowShouldClose(window) ) {
             glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); // clear the framebuffer
@@ -206,12 +208,22 @@ public class Application {
                             sortj = 0;
                             sorti++;
                         }
-                        // System.out.println("Heights: " + barHeights.size() + " I: " + sorti + " J: " + sortj);
-                        setupQuads(sortj, sortj+1);
+                        setupQuads();
+                        // Color the selected bars
+                        for(int index = 0; index < barHeights.size(); index++) {
+                            if(index == sortj || index == sortj+1) {
+                                quads.get(index).setColor(SELECTION_COLOR.x, SELECTION_COLOR.y, SELECTION_COLOR.z, SELECTION_COLOR.w);
+                            }
+                        }
                     } else {
                         sorting = false;
                         bubble = false;
+                        quads.get(0).setColor(COMPLETE_COLOR.x, COMPLETE_COLOR.y, COMPLETE_COLOR.z, COMPLETE_COLOR.w);
                         System.out.println("Bubble Sort Complete");
+                    }
+                    // Color the completed bars
+                    for(int index = quads.size() - 1; index > quads.size() - sorti - 1; index--) {
+                        quads.get(index).setColor(COMPLETE_COLOR.x, COMPLETE_COLOR.y, COMPLETE_COLOR.z, COMPLETE_COLOR.w);
                     }
                 }
             }
@@ -264,23 +276,6 @@ public class Application {
         new Application().run();
     }
 
-    public void setupQuads(int indexOne, int indexTwo) {
-        quads.clear();
-        for(int index = 0; index < barHeights.size(); index++) {
-            float domain = 800.0f;
-            float cutoff = 240.0f;
-            float width = (domain / barHeights.size()) - 0.2f * (domain / barHeights.size());
-            float height = barHeights.get(index);
-            float x = cutoff + ((domain / barHeights.size()) * index);
-            float y = 0.0f;
-            Quad quad = new Quad(x, y, width, height, BASE_COLOR.x, BASE_COLOR.y, BASE_COLOR.z, BASE_COLOR.w);
-            if(index == indexOne || index == indexTwo) {
-                quad.setColor(SELECTION_COLOR.x, SELECTION_COLOR.y, SELECTION_COLOR.z, SELECTION_COLOR.w);
-            }
-            quads.add(quad);
-        }
-    }
-
     public void setupQuads() {
         quads.clear();
         for(int index = 0; index < barHeights.size(); index++) {
@@ -293,6 +288,13 @@ public class Application {
             Quad quad = new Quad(x, y, width, height, BASE_COLOR.x, BASE_COLOR.y, BASE_COLOR.z, BASE_COLOR.w);
             quads.add(quad);
         }
+    }
+
+    public void resetBars() {
+        sorti = 0;
+        sortj = 0;
+        Collections.shuffle(barHeights);
+        setupQuads();
     }
 
 }

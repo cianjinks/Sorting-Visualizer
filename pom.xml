@@ -6,9 +6,9 @@
 
     <groupId>com.hobbeos</groupId>
     <artifactId>SortingVisualiser</artifactId>
-    <version>1.0</version>
+    <version>0.1</version>
 
-    <url></url>
+    <url>https://github.com/HobbesOSWasTaken/Sorting-Visualiser</url>
 
     <licenses>
         <license>
