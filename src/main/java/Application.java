@@ -1,4 +1,3 @@
-import com.sun.tools.javac.util.ArrayUtils;
 import org.joml.Matrix4f;
 import org.joml.Vector4f;
 import org.lwjgl.BufferUtils;
@@ -34,6 +33,7 @@ public class Application {
     private static Vector4f COMPLETE_COLOR = new Vector4f(0.5f, 0.0f, 0.5f, 1.0f);
     private boolean sorting = false;
     private boolean bubble = false;
+    private boolean selection = false;
     private int sorti = 0;
     private int sortj = 0;
 
@@ -78,19 +78,19 @@ public class Application {
             if(key == GLFW_KEY_A && action == GLFW_RELEASE) {
                 // TODO: Broken
                 if(!sorting) {
-                    /**barHeights.clear();
-                    Random random = new Random();
-                    int numBars = random.nextInt(96) + 5;
-                    for(int index = 0; index < numBars; index++) {
-                        barHeights.add(Math.round(random.nextFloat() * 500.0f));
-                    }**/
                     resetBars();
                 }
             }
             if(key == GLFW_KEY_B && action == GLFW_RELEASE) {
-                if(!sorting && !bubble) {
+                if(!sorting) {
                     sorting = true;
                     bubble = true;
+                }
+            }
+            if(key == GLFW_KEY_I && action == GLFW_RELEASE) {
+                if(!sorting) {
+                    sorting = true;
+                    selection = true;
                 }
             }
         });
@@ -190,6 +190,8 @@ public class Application {
         Matrix4f mvp = new Matrix4f().ortho(0.0f, 1280.0f, 0.0f, 720.0f, -1.0f, 1.0f);
 
         completed = new ArrayList<Integer>();
+        int minelement = 0;
+        boolean selectionfor = false;
 
         while ( !glfwWindowShouldClose(window) ) {
             glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); // clear the framebuffer
@@ -225,6 +227,31 @@ public class Application {
                     for(int index = quads.size() - 1; index > quads.size() - sorti - 1; index--) {
                         quads.get(index).setColor(COMPLETE_COLOR.x, COMPLETE_COLOR.y, COMPLETE_COLOR.z, COMPLETE_COLOR.w);
                     }
+                }
+                // Selection Sort
+                else if(selection) {
+                    if(sorti < barHeights.size() - 1 && !selectionfor) {
+                        minelement = sorti;
+                        sortj = sorti + 1;
+                        selectionfor = true;
+                    } else if(selectionfor) {
+                        if(sortj < barHeights.size()) {
+                            if(barHeights.get(sortj) < barHeights.get(minelement)) {
+                                minelement = sortj;
+                            }
+                            sortj++;
+                        } else {
+                            selectionfor = false;
+                            Collections.swap(barHeights, minelement, sorti);
+                            setupQuads();
+                            sorti++;
+                        }
+                    } else {
+                        sorting = false;
+                        selection = false;
+                        System.out.println("Selection Sort Complete");
+                    }
+                    System.out.println("I: " + sorti + " J: " + sortj + " BarSize: " + barHeights.size() + " MinElem: " + minelement);
                 }
             }
 
