@@ -244,14 +244,25 @@ public class Application {
                             selectionfor = false;
                             Collections.swap(barHeights, minelement, sorti);
                             setupQuads();
+                            // Color the selected bars
+                            for(int index = 0; index < barHeights.size(); index++) {
+                                if(index == minelement || index == sorti) {
+                                    quads.get(index).setColor(SELECTION_COLOR.x, SELECTION_COLOR.y, SELECTION_COLOR.z, SELECTION_COLOR.w);
+                                }
+                            }
                             sorti++;
                         }
                     } else {
                         sorting = false;
                         selection = false;
+                        quads.get(quads.size() - 1).setColor(COMPLETE_COLOR.x, COMPLETE_COLOR.y, COMPLETE_COLOR.z, COMPLETE_COLOR.w);
                         System.out.println("Selection Sort Complete");
                     }
-                    System.out.println("I: " + sorti + " J: " + sortj + " BarSize: " + barHeights.size() + " MinElem: " + minelement);
+                    // System.out.println("I: " + sorti + " J: " + sortj + " BarSize: " + barHeights.size() + " MinElem: " + minelement);
+                    // Color the completed bars
+                    for(int index = 0; index < sorti; index++) {
+                        quads.get(index).setColor(COMPLETE_COLOR.x, COMPLETE_COLOR.y, COMPLETE_COLOR.z, COMPLETE_COLOR.w);
+                    }
                 }
             }
 
