@@ -363,8 +363,6 @@ public class Application {
             ImGui.setNextWindowSize(300, 100, ImGuiCond.Once);
             ImGui.setNextWindowPos(25, 25, ImGuiCond.Once);
             ImGui.begin("Controls");
-            // ImGui.sliderFloat("Color", color, 0.0f, 1.0f);
-            // ImGui.sliderFloat("Iterations", maxIter, 0.0f, 1000.0f);
             if(ImGui.button("Bubble Sort", 125f, 30f)) {
                 if(!sorting) {
                     sorting = true;
