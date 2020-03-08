@@ -29,13 +29,6 @@ as the basics of batch rendering in graphics programming.
   
   <kbd>A</kbd> to randomise the data.
   
-## Configuration
-
-**GUI**
-
-    The UI presents you with buttons to enable each sorting algorithm as 
-    well as randomise the data via a pure java binding of ImGUI. 
-    
 ## Libraries
 
 * [LWJGL 3](https://www.lwjgl.org/) (minimal OpenGL configuration)
