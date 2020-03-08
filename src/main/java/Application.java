@@ -1,3 +1,7 @@
+import imgui.ImGui;
+import imgui.ImGuiIO;
+import imgui.enums.ImGuiCond;
+import imgui.gl3.ImGuiImplGl3;
 import org.joml.Matrix4f;
 import org.joml.Vector4f;
 import org.lwjgl.BufferUtils;
@@ -37,6 +41,17 @@ public class Application {
     private int sorti = 0;
     private int sortj = 0;
 
+    // GUI
+    private final ImGuiImplGl3 imGuiGl3 = new ImGuiImplGl3();
+    final ImGuiIO io = ImGui.getIO();
+    private final int[] winWidth = new int[1];
+    private final int[] winHeight = new int[1];
+    private final int[] fbWidth = new int[1];
+    private final int[] fbHeight = new int[1];
+
+    private final double[] mousePosX = new double[1];
+    private final double[] mousePosY = new double[1];
+
     public void run() {
 
         init();
@@ -71,6 +86,11 @@ public class Application {
             throw new RuntimeException("Failed to create the GLFW window");
 
         // Setup a key callback. It will be called every time a key is pressed, repeated or released.
+        ImGui.createContext();
+        ImGui.styleColorsDark();
+        io.setIniFilename(null);
+        io.setBackendPlatformName("imgui_java_impl_glfw");
+        io.setBackendRendererName("imgui_java_impl_lwjgl");
         glfwSetKeyCallback(window, (window, key, scancode, action, mods) -> {
             if( key == GLFW_KEY_ESCAPE && action == GLFW_RELEASE ) {
                 glfwSetWindowShouldClose(window, true);
@@ -93,6 +113,27 @@ public class Application {
                     selection = true;
                 }
             }
+        });
+
+        glfwSetMouseButtonCallback(window, (w, button, action, mods) -> {
+            final boolean[] mouseDown = new boolean[5];
+
+            mouseDown[0] = button == GLFW_MOUSE_BUTTON_1 && action != GLFW_RELEASE;
+            mouseDown[1] = button == GLFW_MOUSE_BUTTON_2 && action != GLFW_RELEASE;
+            mouseDown[2] = button == GLFW_MOUSE_BUTTON_3 && action != GLFW_RELEASE;
+            mouseDown[3] = button == GLFW_MOUSE_BUTTON_4 && action != GLFW_RELEASE;
+            mouseDown[4] = button == GLFW_MOUSE_BUTTON_5 && action != GLFW_RELEASE;
+
+            io.setMouseDown(mouseDown);
+
+            if (!io.getWantCaptureMouse() && mouseDown[1]) {
+                ImGui.setWindowFocus(null);
+            }
+        });
+
+        glfwSetScrollCallback(window, (w, xOffset, yOffset) -> {
+            io.setMouseWheelH(io.getMouseWheelH() + (float) xOffset);
+            io.setMouseWheel(io.getMouseWheel() + (float) yOffset);
         });
 
         // Get the thread stack and push a new frame
@@ -193,6 +234,12 @@ public class Application {
         int minelement = 0;
         boolean selectionfor = false;
 
+        // GUI
+        imGuiGl3.init();
+        float[] color = new float[]{0.0f};
+        float[] maxIter = new float[]{100.0f};
+        double time = 0;
+
         while ( !glfwWindowShouldClose(window) ) {
             glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); // clear the framebuffer
 
@@ -247,7 +294,6 @@ public class Application {
                             // Color the selected bars
                             for(int index = 0; index < barHeights.size(); index++) {
                                 if(index == minelement || index == sorti) {
-                                    // TODO
                                     quads.get(index).setColor(SELECTION_COLOR.x, SELECTION_COLOR.y, SELECTION_COLOR.z, SELECTION_COLOR.w);
                                 }
                             }
@@ -260,7 +306,6 @@ public class Application {
                         quads.get(quads.size() - 2).setColor(COMPLETE_COLOR.x, COMPLETE_COLOR.y, COMPLETE_COLOR.z, COMPLETE_COLOR.w);
                         System.out.println("Selection Sort Complete");
                     }
-                    // System.out.println("I: " + sorti + " J: " + sortj + " BarSize: " + barHeights.size() + " MinElem: " + minelement);
                     // Color the completed bars
                     for(int index = 0; index < sorti - 1; index++) {
                         quads.get(index).setColor(COMPLETE_COLOR.x, COMPLETE_COLOR.y, COMPLETE_COLOR.z, COMPLETE_COLOR.w);
@@ -302,6 +347,66 @@ public class Application {
             GL30.glDisableVertexAttribArray(1);
             GL30.glBindVertexArray(0);
 
+            // GUI
+            final double currentTime = glfwGetTime();
+            final double deltaTime = (time > 0) ? (currentTime - time) : 1f / 60f;
+            time = currentTime;
+            glfwGetWindowSize(window, winWidth, winHeight);
+            glfwGetFramebufferSize(window, fbWidth, fbHeight);
+            glfwGetCursorPos(window, mousePosX, mousePosY);
+            io.setDisplaySize(winWidth[0], winHeight[0]);
+            io.setDisplayFramebufferScale((float) fbWidth[0] / winWidth[0], (float) fbHeight[0] / winHeight[0]);
+            io.setMousePos((float) mousePosX[0], (float) mousePosY[0]);
+            io.setDeltaTime((float) deltaTime);
+            ImGui.newFrame();
+
+            ImGui.setNextWindowSize(300, 100, ImGuiCond.Once);
+            ImGui.setNextWindowPos(25, 25, ImGuiCond.Once);
+            ImGui.begin("Controls");
+            // ImGui.sliderFloat("Color", color, 0.0f, 1.0f);
+            // ImGui.sliderFloat("Iterations", maxIter, 0.0f, 1000.0f);
+            if(ImGui.button("Bubble Sort", 125f, 30f)) {
+                if(!sorting) {
+                    sorting = true;
+                    bubble = true;
+                }
+            }
+            ImGui.sameLine(0f, -1f);
+            if(ImGui.button("Selection Sort", 125f, 30f)) {
+                if(!sorting) {
+                    sorting = true;
+                    selection = true;
+                }
+            }
+            if(ImGui.button("Reset", 125f, 30f)) {
+                if(!sorting) {
+                    resetBars();
+                } else {
+                    ImGui.sameLine(0f, -1f);
+                    ImGui.text("CANNOT RESET");
+                }
+            }
+            // TODO
+            /**if(ImGui.button("Randomise Speed", 125f, 30f)) {
+                if(!sorting) {
+                    barHeights.clear();
+                    numBars = random.nextInt(96) + 5;
+                    for(int index = 0; index < numBars; index++) {
+                        barHeights.add(Math.round(random.nextFloat() * 500.0f));
+                    }
+                    setupQuads();
+                    resetBars();
+                } else {
+                    ImGui.sameLine(0f, -1f);
+                    ImGui.text("CANNOT RESET");
+                }
+            }**/
+
+            ImGui.end();
+
+            ImGui.render();
+            imGuiGl3.render(ImGui.getDrawData());
+
             // Clear the VBO
             vboBuffer.clear();
 
@@ -310,6 +415,8 @@ public class Application {
             glfwSwapBuffers(window); // swap the color buffers
             glfwPollEvents();
         }
+        imGuiGl3.dispose();
+        ImGui.destroyContext();
     }
 
     public static void main(String[] args) {
