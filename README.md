@@ -1,5 +1,5 @@
-# Sorting Visualiser
-This application visualises different sorting algorithms using OpenGL.
+# Sorting Visualizer
+This application visualizes different sorting algorithms using OpenGL.
 My main goal for this project was to learn various different sorting algorithms as well
 as the basics of batch rendering in graphics programming.
 
