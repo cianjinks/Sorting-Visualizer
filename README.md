@@ -45,3 +45,7 @@ as the basics of batch rendering in graphics programming.
 ## Credits
 
 * [Clément Mihailescu](https://github.com/clementmihailescu) for the idea from his project in JS
+
+## Planned
+
+  - Add more complex algorithms
