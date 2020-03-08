@@ -247,6 +247,7 @@ public class Application {
                             // Color the selected bars
                             for(int index = 0; index < barHeights.size(); index++) {
                                 if(index == minelement || index == sorti) {
+                                    // TODO
                                     quads.get(index).setColor(SELECTION_COLOR.x, SELECTION_COLOR.y, SELECTION_COLOR.z, SELECTION_COLOR.w);
                                 }
                             }
@@ -256,11 +257,12 @@ public class Application {
                         sorting = false;
                         selection = false;
                         quads.get(quads.size() - 1).setColor(COMPLETE_COLOR.x, COMPLETE_COLOR.y, COMPLETE_COLOR.z, COMPLETE_COLOR.w);
+                        quads.get(quads.size() - 2).setColor(COMPLETE_COLOR.x, COMPLETE_COLOR.y, COMPLETE_COLOR.z, COMPLETE_COLOR.w);
                         System.out.println("Selection Sort Complete");
                     }
                     // System.out.println("I: " + sorti + " J: " + sortj + " BarSize: " + barHeights.size() + " MinElem: " + minelement);
                     // Color the completed bars
-                    for(int index = 0; index < sorti; index++) {
+                    for(int index = 0; index < sorti - 1; index++) {
                         quads.get(index).setColor(COMPLETE_COLOR.x, COMPLETE_COLOR.y, COMPLETE_COLOR.z, COMPLETE_COLOR.w);
                     }
                 }
