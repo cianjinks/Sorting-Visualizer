@@ -1,3 +1,5 @@
+import Algorithms.BubbleSort;
+import Algorithms.SelectionSort;
 import imgui.ImGui;
 import imgui.ImGuiIO;
 import imgui.enums.ImGuiCond;
@@ -10,9 +12,7 @@ import org.lwjgl.opengl.*;
 import org.lwjgl.system.*;
 
 import java.nio.*;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Random;
+import java.util.*;
 
 import static org.lwjgl.glfw.Callbacks.*;
 import static org.lwjgl.glfw.GLFW.*;
@@ -28,18 +28,14 @@ public class Application {
     public static int WINDOW_HEIGHT = 720;
     public ArrayList<Quad> quads;
     public ArrayList<Integer> barHeights;
-    public ArrayList<Integer> completed;
-    public static String WINDOW_TITLE = "Batch Renderer";
+    public static String WINDOW_TITLE = "Sorting Visualizer";
 
     // Sorting
-    private static Vector4f BASE_COLOR = new Vector4f(0.0f, 1.0f, 0.0f, 1.0f);
-    private static Vector4f SELECTION_COLOR = new Vector4f(1.0f, 1.0f, 0.0f, 1.0f);
-    private static Vector4f COMPLETE_COLOR = new Vector4f(0.5f, 0.0f, 0.5f, 1.0f);
+    private static HashMap<Integer, Vector4f> colors = new HashMap<>();
+
     private boolean sorting = false;
     private boolean bubble = false;
     private boolean selection = false;
-    private int sorti = 0;
-    private int sortj = 0;
 
     // GUI
     private final ImGuiImplGl3 imGuiGl3 = new ImGuiImplGl3();
@@ -175,14 +171,14 @@ public class Application {
 
         Random random = new Random();
         // Generate between 5 - 100 bars of random height
-        barHeights = new ArrayList<Integer>();
+        barHeights = new ArrayList<>();
         int numBars = random.nextInt(96) + 5;
         for(int index = 0; index < numBars; index++) {
             barHeights.add(Math.round(random.nextFloat() * 500.0f));
         }
 
         // Setup Quads
-        quads = new ArrayList<Quad>();
+        quads = new ArrayList<>();
         setupQuads();
 
         // IBO (Index Buffer Object)
@@ -230,85 +226,60 @@ public class Application {
 
         Matrix4f mvp = new Matrix4f().ortho(0.0f, 1280.0f, 0.0f, 720.0f, -1.0f, 1.0f);
 
-        completed = new ArrayList<Integer>();
-        int minelement = 0;
-        boolean selectionfor = false;
+        // Simulate Bubble Sort
+        int[] data = new int[barHeights.size()];
+        int increment = 0;
+        for(int i : barHeights) {
+            data[increment] = i;
+            increment++;
+        }
+
+        BubbleSort bubbleSort = new BubbleSort(data);
+        bubbleSort.simulate();
+        ArrayList<ArrayList<int[]>> bubbleSimulation = bubbleSort.getSimulation();
+        int bubbleFrame = 0;
+
+        // Simulate Selection Sort
+        data = new int[barHeights.size()];
+        increment = 0;
+        for(int i : barHeights) {
+            data[increment] = i;
+            increment++;
+        }
+
+        SelectionSort selectionSort = new SelectionSort(data);
+        selectionSort.simulate();
+        ArrayList<ArrayList<int[]>> selectionSimulation = selectionSort.getSimulation();
+        int selectionFrame = 0;
 
         // GUI
         imGuiGl3.init();
-        float[] color = new float[]{0.0f};
-        float[] maxIter = new float[]{100.0f};
         double time = 0;
 
         while ( !glfwWindowShouldClose(window) ) {
             glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); // clear the framebuffer
 
-            // Sorting Algorithms
             if(sorting) {
                 // Bubble Sort
                 if(bubble) {
-                    if(sorti < barHeights.size() - 1) {
-                        if(sortj < barHeights.size() - sorti - 1) {
-                            if(barHeights.get(sortj) > barHeights.get(sortj + 1)) {
-                                Collections.swap(barHeights, sortj, sortj+1);
-                            }
-                            sortj++;
-                        } else {
-                            sortj = 0;
-                            sorti++;
-                        }
-                        setupQuads();
-                        // Color the selected bars
-                        for(int index = 0; index < barHeights.size(); index++) {
-                            if(index == sortj || index == sortj+1) {
-                                quads.get(index).setColor(SELECTION_COLOR.x, SELECTION_COLOR.y, SELECTION_COLOR.z, SELECTION_COLOR.w);
-                            }
-                        }
+                    if(bubbleFrame < bubbleSimulation.size()) {
+                        setupQuads(bubbleSimulation.get(bubbleFrame));
+                        bubbleFrame++;
                     } else {
-                        sorting = false;
                         bubble = false;
-                        quads.get(0).setColor(COMPLETE_COLOR.x, COMPLETE_COLOR.y, COMPLETE_COLOR.z, COMPLETE_COLOR.w);
-                        System.out.println("Bubble Sort Complete");
-                    }
-                    // Color the completed bars
-                    for(int index = quads.size() - 1; index > quads.size() - sorti - 1; index--) {
-                        quads.get(index).setColor(COMPLETE_COLOR.x, COMPLETE_COLOR.y, COMPLETE_COLOR.z, COMPLETE_COLOR.w);
+                        sorting = false;
+                        bubbleFrame = 0;
                     }
                 }
                 // Selection Sort
                 else if(selection) {
-                    if(sorti < barHeights.size() - 1 && !selectionfor) {
-                        minelement = sorti;
-                        sortj = sorti + 1;
-                        selectionfor = true;
-                    } else if(selectionfor) {
-                        if(sortj < barHeights.size()) {
-                            if(barHeights.get(sortj) < barHeights.get(minelement)) {
-                                minelement = sortj;
-                            }
-                            sortj++;
-                        } else {
-                            selectionfor = false;
-                            Collections.swap(barHeights, minelement, sorti);
-                            setupQuads();
-                            // Color the selected bars
-                            for(int index = 0; index < barHeights.size(); index++) {
-                                if(index == minelement || index == sorti) {
-                                    quads.get(index).setColor(SELECTION_COLOR.x, SELECTION_COLOR.y, SELECTION_COLOR.z, SELECTION_COLOR.w);
-                                }
-                            }
-                            sorti++;
-                        }
+                    if(selectionFrame < selectionSimulation.size()) {
+                        setupQuads(selectionSimulation.get(selectionFrame));
+                        selectionFrame++;
                     } else {
-                        sorting = false;
                         selection = false;
-                        quads.get(quads.size() - 1).setColor(COMPLETE_COLOR.x, COMPLETE_COLOR.y, COMPLETE_COLOR.z, COMPLETE_COLOR.w);
-                        quads.get(quads.size() - 2).setColor(COMPLETE_COLOR.x, COMPLETE_COLOR.y, COMPLETE_COLOR.z, COMPLETE_COLOR.w);
-                        System.out.println("Selection Sort Complete");
-                    }
-                    // Color the completed bars
-                    for(int index = 0; index < sorti - 1; index++) {
-                        quads.get(index).setColor(COMPLETE_COLOR.x, COMPLETE_COLOR.y, COMPLETE_COLOR.z, COMPLETE_COLOR.w);
+                        sorting = false;
+                        selectionFrame = 0;
                     }
                 }
             }
@@ -384,21 +355,19 @@ public class Application {
                     ImGui.text("CANNOT RESET");
                 }
             }
-            // TODO
-            /**if(ImGui.button("Randomise Speed", 125f, 30f)) {
+            if(ImGui.button("Randomise Speed", 125f, 30f)) {
                 if(!sorting) {
-                    barHeights.clear();
+                    barHeights = new ArrayList<>();
                     numBars = random.nextInt(96) + 5;
                     for(int index = 0; index < numBars; index++) {
                         barHeights.add(Math.round(random.nextFloat() * 500.0f));
                     }
-                    setupQuads();
                     resetBars();
                 } else {
                     ImGui.sameLine(0f, -1f);
                     ImGui.text("CANNOT RESET");
                 }
-            }**/
+            }
 
             ImGui.end();
 
@@ -417,12 +386,8 @@ public class Application {
         ImGui.destroyContext();
     }
 
-    public static void main(String[] args) {
-        new Application().run();
-    }
-
     public void setupQuads() {
-        quads.clear();
+        quads = new ArrayList<>();
         for(int index = 0; index < barHeights.size(); index++) {
             float domain = 800.0f;
             float cutoff = 240.0f;
@@ -430,16 +395,35 @@ public class Application {
             float height = barHeights.get(index);
             float x = cutoff + ((domain / barHeights.size()) * index);
             float y = 0.0f;
-            Quad quad = new Quad(x, y, width, height, BASE_COLOR.x, BASE_COLOR.y, BASE_COLOR.z, BASE_COLOR.w);
+            Quad quad = new Quad(x, y, width, height, colors.get(0));
+            quads.add(quad);
+        }
+    }
+
+    public void setupQuads(ArrayList<int[]> frame) {
+        quads = new ArrayList<>();
+        for(int index = 0; index < frame.size(); index++) {
+            float domain = 800.0f;
+            float cutoff = 240.0f;
+            float width = (domain / frame.size()) - 0.2f * (domain / frame.size());
+            float height = frame.get(index)[0];
+            float x = cutoff + ((domain / frame.size()) * index);
+            float y = 0.0f;
+            Quad quad = new Quad(x, y, width, height, colors.get(frame.get(index)[1]));
             quads.add(quad);
         }
     }
 
     public void resetBars() {
-        sorti = 0;
-        sortj = 0;
         Collections.shuffle(barHeights);
         setupQuads();
+    }
+
+    public static void main(String[] args) {
+        colors.put(0, new Vector4f(0.0f, 1.0f, 0.0f, 1.0f));
+        colors.put(1, new Vector4f(1.0f, 1.0f, 0.0f, 1.0f));
+        colors.put(2, new Vector4f(0.5f, 0.0f, 0.5f, 1.0f));
+        new Application().run();
     }
 
 }
