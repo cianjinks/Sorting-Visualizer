@@ -27,6 +27,8 @@ as the basics of batch rendering in graphics programming.
   
   <kbd>I</kbd> for selection sort.
   
+  <kbd>Q</kbd> for quick sort.
+  
   <kbd>A</kbd> to randomise the data.
   
 ## Libraries
