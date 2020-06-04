@@ -39,6 +39,13 @@ public class Application {
     private boolean selection = false;
     private boolean quick = false;
 
+    ArrayList<ArrayList<int[]>> bubbleSimulation;
+    private int bubbleFrame = 0;
+    ArrayList<ArrayList<int[]>> selectionSimulation;
+    private int selectionFrame = 0;
+    ArrayList<ArrayList<int[]>> quickSimulation;
+    private int quickFrame = 0;
+
     // GUI
     private final ImGuiImplGl3 imGuiGl3 = new ImGuiImplGl3();
     final ImGuiIO io = ImGui.getIO();
@@ -234,45 +241,7 @@ public class Application {
 
         Matrix4f mvp = new Matrix4f().ortho(0.0f, 1280.0f, 0.0f, 720.0f, -1.0f, 1.0f);
 
-        // Simulate Bubble Sort
-        int[] data = new int[barHeights.size()];
-        int increment = 0;
-        for(int i : barHeights) {
-            data[increment] = i;
-            increment++;
-        }
-
-        BubbleSort bubbleSort = new BubbleSort(data);
-        bubbleSort.sort();
-        ArrayList<ArrayList<int[]>> bubbleSimulation = bubbleSort.getSimulation();
-        int bubbleFrame = 0;
-
-        // Simulate Selection Sort
-        data = new int[barHeights.size()];
-        increment = 0;
-        for(int i : barHeights) {
-            data[increment] = i;
-            increment++;
-        }
-
-        SelectionSort selectionSort = new SelectionSort(data);
-        selectionSort.sort();
-        ArrayList<ArrayList<int[]>> selectionSimulation = selectionSort.getSimulation();
-        int selectionFrame = 0;
-
-        // Simulate Quick Sort
-        data = new int[barHeights.size()];
-        increment = 0;
-        for(int i : barHeights) {
-            data[increment] = i;
-            increment++;
-        }
-
-        QuickSort quickSort = new QuickSort(data);
-        quickSort.sort(0, data.length-1);
-        quickSort.complete();
-        ArrayList<ArrayList<int[]>> quickSimulation = quickSort.getSimulation();
-        int quickFrame = 0;
+        runSimulation();
 
         // GUI
         imGuiGl3.init();
@@ -381,12 +350,13 @@ public class Application {
                     selection = true;
                 }
             }
-            /**if(ImGui.button("Reset", 125f, 30f)) {
+            if(ImGui.button("Reset", 125f, 30f)) {
                 if(!sorting) {
                     resetBars();
+                    runSimulation();
                 }
             }
-            ImGui.sameLine(0f, -1f);**/
+            ImGui.sameLine(0f, -1f);
             if(ImGui.button("Quick Sort", 125f, 30f)) {
                 if(!sorting) {
                     sorting = true;
@@ -467,6 +437,48 @@ public class Application {
             System.out.print(i + " ");
         }
         System.out.print("\n");
+    }
+
+    private void runSimulation() {
+        // Simulate Bubble Sort
+        int[] data = new int[barHeights.size()];
+        int increment = 0;
+        for(int i : barHeights) {
+            data[increment] = i;
+            increment++;
+        }
+
+        BubbleSort bubbleSort = new BubbleSort(data);
+        bubbleSort.sort();
+        bubbleSimulation = bubbleSort.getSimulation();
+        bubbleFrame = 0;
+
+        // Simulate Selection Sort
+        data = new int[barHeights.size()];
+        increment = 0;
+        for(int i : barHeights) {
+            data[increment] = i;
+            increment++;
+        }
+
+        SelectionSort selectionSort = new SelectionSort(data);
+        selectionSort.sort();
+        selectionSimulation = selectionSort.getSimulation();
+        selectionFrame = 0;
+
+        // Simulate Quick Sort
+        data = new int[barHeights.size()];
+        increment = 0;
+        for(int i : barHeights) {
+            data[increment] = i;
+            increment++;
+        }
+
+        QuickSort quickSort = new QuickSort(data);
+        quickSort.sort(0, data.length-1);
+        quickSort.complete();
+        quickSimulation = quickSort.getSimulation();
+        quickFrame = 0;
     }
 
 
