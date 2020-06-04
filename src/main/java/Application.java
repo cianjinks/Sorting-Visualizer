@@ -1,4 +1,5 @@
 import Algorithms.BubbleSort;
+import Algorithms.QuickSort;
 import Algorithms.SelectionSort;
 import imgui.ImGui;
 import imgui.ImGuiIO;
@@ -36,6 +37,7 @@ public class Application {
     private boolean sorting = false;
     private boolean bubble = false;
     private boolean selection = false;
+    private boolean quick = false;
 
     // GUI
     private final ImGuiImplGl3 imGuiGl3 = new ImGuiImplGl3();
@@ -107,6 +109,12 @@ public class Application {
                 if(!sorting) {
                     sorting = true;
                     selection = true;
+                }
+            }
+            if(key == GLFW_KEY_Q && action == GLFW_RELEASE) {
+                if(!sorting) {
+                    sorting = true;
+                    quick = true;
                 }
             }
         });
@@ -235,7 +243,7 @@ public class Application {
         }
 
         BubbleSort bubbleSort = new BubbleSort(data);
-        bubbleSort.simulate();
+        bubbleSort.sort();
         ArrayList<ArrayList<int[]>> bubbleSimulation = bubbleSort.getSimulation();
         int bubbleFrame = 0;
 
@@ -248,9 +256,23 @@ public class Application {
         }
 
         SelectionSort selectionSort = new SelectionSort(data);
-        selectionSort.simulate();
+        selectionSort.sort();
         ArrayList<ArrayList<int[]>> selectionSimulation = selectionSort.getSimulation();
         int selectionFrame = 0;
+
+        // Simulate Quick Sort
+        data = new int[barHeights.size()];
+        increment = 0;
+        for(int i : barHeights) {
+            data[increment] = i;
+            increment++;
+        }
+
+        QuickSort quickSort = new QuickSort(data);
+        quickSort.sort(0, data.length-1);
+        quickSort.complete();
+        ArrayList<ArrayList<int[]>> quickSimulation = quickSort.getSimulation();
+        int quickFrame = 0;
 
         // GUI
         imGuiGl3.init();
@@ -282,16 +304,28 @@ public class Application {
                         selectionFrame = 0;
                     }
                 }
+                // Quick Sort
+                else if(quick) {
+                    if(quickFrame < quickSimulation.size()) {
+                        setupQuads(quickSimulation.get(quickFrame));
+                        // printFrame(quickSimulation.get(quickFrame), quickFrame);
+                        quickFrame++;
+                    } else {
+                        quick = false;
+                        sorting = false;
+                        quickFrame = 0;
+                    }
+                }
             }
 
             // VBO (Vertex Buffer Object)
-            Vertex[] vertices = null;
-            for(int quad = 0; quad < quads.size(); quad++) {
-                quads.get(quad).updatePosition();
-                vertices = quads.get(quad).getVertices();
-                for(int vertex = 0; vertex < vertices.length; vertex++) {
-                    vboBuffer.put(vertices[vertex].getXYZW());
-                    vboBuffer.put(vertices[vertex].getRGBA());
+            Vertex[] vertices;
+            for (Quad quad : quads) {
+                quad.updatePosition();
+                vertices = quad.getVertices();
+                for (Vertex vertex : vertices) {
+                    vboBuffer.put(vertex.getXYZW());
+                    vboBuffer.put(vertex.getRGBA());
                 }
             }
             vboBuffer.flip();
@@ -331,7 +365,7 @@ public class Application {
             io.setDeltaTime((float) deltaTime);
             ImGui.newFrame();
 
-            ImGui.setNextWindowSize(300, 100, ImGuiCond.Once);
+            ImGui.setNextWindowSize(275, 135, ImGuiCond.Once);
             ImGui.setNextWindowPos(25, 25, ImGuiCond.Once);
             ImGui.begin("Controls");
             if(ImGui.button("Bubble Sort", 125f, 30f)) {
@@ -347,15 +381,19 @@ public class Application {
                     selection = true;
                 }
             }
-            if(ImGui.button("Reset", 125f, 30f)) {
+            /**if(ImGui.button("Reset", 125f, 30f)) {
                 if(!sorting) {
                     resetBars();
-                } else {
-                    ImGui.sameLine(0f, -1f);
-                    ImGui.text("CANNOT RESET");
                 }
             }
-            if(ImGui.button("Randomise Speed", 125f, 30f)) {
+            ImGui.sameLine(0f, -1f);**/
+            if(ImGui.button("Quick Sort", 125f, 30f)) {
+                if(!sorting) {
+                    sorting = true;
+                    quick = true;;
+                }
+            }
+            /**if(ImGui.button("Randomise Speed", 125f, 30f)) {
                 if(!sorting) {
                     barHeights = new ArrayList<>();
                     numBars = random.nextInt(96) + 5;
@@ -363,11 +401,7 @@ public class Application {
                         barHeights.add(Math.round(random.nextFloat() * 500.0f));
                     }
                     resetBars();
-                } else {
-                    ImGui.sameLine(0f, -1f);
-                    ImGui.text("CANNOT RESET");
-                }
-            }
+            }**/
 
             ImGui.end();
 
@@ -419,10 +453,28 @@ public class Application {
         setupQuads();
     }
 
+    private void printFrame(ArrayList<int[]> frame, int num) {
+        System.out.print("Frame " + num + ": ");
+        for(int[] i : frame) {
+            System.out.print(i[0] + " ");
+        }
+        System.out.print("\n");
+    }
+
+    private void printData(int[] data) {
+        System.out.print("Data: ");
+        for(int i : data) {
+            System.out.print(i + " ");
+        }
+        System.out.print("\n");
+    }
+
+
     public static void main(String[] args) {
         colors.put(0, new Vector4f(0.0f, 1.0f, 0.0f, 1.0f));
         colors.put(1, new Vector4f(1.0f, 1.0f, 0.0f, 1.0f));
         colors.put(2, new Vector4f(0.5f, 0.0f, 0.5f, 1.0f));
+        colors.put(3, new Vector4f(1.0f, 0.0f, 0.0f, 1.0f));
         new Application().run();
     }
 

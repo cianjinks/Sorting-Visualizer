@@ -16,7 +16,7 @@ public class BubbleSort {
         colors.put("purple", 2);
     }
 
-    public void simulate() {
+    public void sort() {
         for(int i = 0; i < data.length - 1; i++) {
             for(int j = 0; j < data.length - i - 1; j++) {
                 if(data[j] > data[j + 1]) {

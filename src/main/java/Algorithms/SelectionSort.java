@@ -16,7 +16,7 @@ public class SelectionSort {
         colors.put("purple", 2);
     }
 
-    public void simulate() {
+    public void sort() {
         for(int i = 0; i < data.length - 1; i++) {
 
             int minimumIndex = i;
