@@ -80,10 +80,6 @@ public class QuickSort {
         return simulation;
     }
 
-    public void complete() {
-        simulation.add(generateCompletedFrame());
-    }
-
     private ArrayList<int[]> generateFrame() {
         ArrayList<int[]> frame = new ArrayList<>();
         boolean lastComplete = true;
@@ -102,6 +98,10 @@ public class QuickSort {
         return frame;
     }
 
+    public void complete() {
+        simulation.add(generateCompletedFrame());
+    }
+
     private ArrayList<int[]> generateCompletedFrame() {
         ArrayList<int[]> frame = new ArrayList<>();
         for (int i = 0; i < data.length; i++) {
@@ -109,5 +109,4 @@ public class QuickSort {
         }
         return frame;
     }
-
 }

@@ -29,6 +29,8 @@ as the basics of batch rendering in graphics programming.
   
   <kbd>Q</kbd> for quick sort.
   
+  <kbd>M</kbd> for merge sort.
+  
   <kbd>A</kbd> to randomise the data.
   
 ## Libraries

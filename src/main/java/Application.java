@@ -1,4 +1,5 @@
 import Algorithms.BubbleSort;
+import Algorithms.MergeSort;
 import Algorithms.QuickSort;
 import Algorithms.SelectionSort;
 import imgui.ImGui;
@@ -38,6 +39,7 @@ public class Application {
     private boolean bubble = false;
     private boolean selection = false;
     private boolean quick = false;
+    private boolean merge = false;
 
     ArrayList<ArrayList<int[]>> bubbleSimulation;
     private int bubbleFrame = 0;
@@ -45,6 +47,8 @@ public class Application {
     private int selectionFrame = 0;
     ArrayList<ArrayList<int[]>> quickSimulation;
     private int quickFrame = 0;
+    ArrayList<ArrayList<int[]>> mergeSimulation;
+    private int mergeFrame = 0;
 
     // GUI
     private final ImGuiImplGl3 imGuiGl3 = new ImGuiImplGl3();
@@ -122,6 +126,12 @@ public class Application {
                 if(!sorting) {
                     sorting = true;
                     quick = true;
+                }
+            }
+            if(key == GLFW_KEY_M && action == GLFW_RELEASE) {
+                if(!sorting) {
+                    sorting = true;
+                    merge = true;
                 }
             }
         });
@@ -285,6 +295,17 @@ public class Application {
                         quickFrame = 0;
                     }
                 }
+                // Merge Sort
+                else if(merge) {
+                    if(mergeFrame < mergeSimulation.size()) {
+                        setupQuads(mergeSimulation.get(mergeFrame));
+                        mergeFrame++;
+                    } else {
+                        merge = false;
+                        sorting = false;
+                        mergeFrame = 0;
+                    }
+                }
             }
 
             // VBO (Vertex Buffer Object)
@@ -350,10 +371,10 @@ public class Application {
                     selection = true;
                 }
             }
-            if(ImGui.button("Reset", 125f, 30f)) {
+            if(ImGui.button("Merge Sort", 125f, 30f)) {
                 if(!sorting) {
-                    resetBars();
-                    runSimulation();
+                    sorting = true;
+                    merge = true;;
                 }
             }
             ImGui.sameLine(0f, -1f);
@@ -361,6 +382,12 @@ public class Application {
                 if(!sorting) {
                     sorting = true;
                     quick = true;;
+                }
+            }
+            if(ImGui.button("Reset", 125f, 30f)) {
+                if(!sorting) {
+                    resetBars();
+                    runSimulation();
                 }
             }
             /**if(ImGui.button("Randomise Speed", 125f, 30f)) {
@@ -479,6 +506,20 @@ public class Application {
         quickSort.complete();
         quickSimulation = quickSort.getSimulation();
         quickFrame = 0;
+
+        // Simulate Merge Sort
+        data = new int[barHeights.size()];
+        increment = 0;
+        for(int i : barHeights) {
+            data[increment] = i;
+            increment++;
+        }
+
+        MergeSort mergeSort = new MergeSort(data);
+        mergeSort.sort(0, data.length - 1);
+        mergeSort.complete();
+        mergeSimulation = mergeSort.getSimulation();
+        mergeFrame = 0;
     }
 
 
