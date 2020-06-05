@@ -8,7 +8,6 @@ import imgui.enums.ImGuiCond;
 import imgui.gl3.ImGuiImplGl3;
 import org.joml.Matrix4f;
 import org.joml.Vector4f;
-import org.lwjgl.BufferUtils;
 import org.lwjgl.glfw.*;
 import org.lwjgl.opengl.*;
 import org.lwjgl.system.*;
@@ -29,6 +28,7 @@ public class Application {
     public static int WINDOW_WIDTH = 1280;
     public static int WINDOW_HEIGHT = 720;
     public ArrayList<Quad> quads;
+    private static int MAX_QUADS = 100;
     public ArrayList<Integer> barHeights;
     public static String WINDOW_TITLE = "Sorting Visualizer";
 
@@ -40,6 +40,7 @@ public class Application {
     private boolean selection = false;
     private boolean quick = false;
     private boolean merge = false;
+    private boolean reset = true;
 
     ArrayList<ArrayList<int[]>> bubbleSimulation;
     private int bubbleFrame = 0;
@@ -111,25 +112,25 @@ public class Application {
                 }
             }
             if(key == GLFW_KEY_B && action == GLFW_RELEASE) {
-                if(!sorting) {
+                if(!sorting && reset) {
                     sorting = true;
                     bubble = true;
                 }
             }
             if(key == GLFW_KEY_I && action == GLFW_RELEASE) {
-                if(!sorting) {
+                if(!sorting && reset) {
                     sorting = true;
                     selection = true;
                 }
             }
             if(key == GLFW_KEY_Q && action == GLFW_RELEASE) {
-                if(!sorting) {
+                if(!sorting && reset) {
                     sorting = true;
                     quick = true;
                 }
             }
             if(key == GLFW_KEY_M && action == GLFW_RELEASE) {
-                if(!sorting) {
+                if(!sorting && reset) {
                     sorting = true;
                     merge = true;
                 }
@@ -206,25 +207,6 @@ public class Application {
         quads = new ArrayList<>();
         setupQuads();
 
-        // IBO (Index Buffer Object)
-        // 768 for 16kb of vertex memory
-        int[] indices = new int[quads.size() * Quad.indicesPerQuad];
-        int offset = 0;
-        for(int i = 0; i < indices.length; i += 6) {
-            indices[i + 0] = 0 + offset;
-            indices[i + 1] = 1 + offset;
-            indices[i + 2] = 2 + offset;
-
-            indices[i + 3] = 2 + offset;
-            indices[i + 4] = 3 + offset;
-            indices[i + 5] = 0 + offset;
-
-            offset += 4;
-        }
-        IntBuffer iboBuffer = BufferUtils.createIntBuffer(indices.length);
-        iboBuffer.put(indices);
-        iboBuffer.flip();
-
         // VAO (Vertex Array Object)
         int vaoID = GL30.glGenVertexArrays();
         GL30.glBindVertexArray(vaoID);
@@ -233,16 +215,19 @@ public class Application {
         int vboID = GL30.glGenBuffers();
         GL30.glBindBuffer(GL30.GL_ARRAY_BUFFER, vboID);
         // Call is now dynamic and so we allocate memory (16kB) or 512 vertices (8 floats per vertex) (768 indices)
-        FloatBuffer vboBuffer = MemoryUtil.memAllocFloat(2 * Quad.verticesPerQuad * 512);
+        FloatBuffer vboBuffer = MemoryUtil.memAllocFloat(2 * Quad.verticesPerQuad * 1024);
         GL30.glBufferData(GL30.GL_ARRAY_BUFFER, vboBuffer.capacity() * Float.BYTES, GL30.GL_DYNAMIC_DRAW);
         GL30.glVertexAttribPointer(0, Vertex.positionElementCount, Vertex.type, false, Vertex.stride, Vertex.positionOffset);
         GL30.glVertexAttribPointer(1, Vertex.colorElementCount, Vertex.type, false, Vertex.stride, Vertex.colorOffset);
 
         GL30.glBindVertexArray(0);
 
+        // IBO (Index Buffer Object)
         int iboID = GL30.glGenBuffers();
         GL30.glBindBuffer(GL30.GL_ELEMENT_ARRAY_BUFFER, iboID);
-        GL30.glBufferData(GL30.GL_ELEMENT_ARRAY_BUFFER, iboBuffer, GL30.GL_STATIC_DRAW);
+        // Just like with VBO call is now dynamic
+        IntBuffer iboBuffer = MemoryUtil.memAllocInt(2 * Quad.indicesPerQuad * 1024);
+        GL30.glBufferData(GL30.GL_ELEMENT_ARRAY_BUFFER, iboBuffer.capacity() * Integer.BYTES, GL30.GL_DYNAMIC_DRAW);
         GL30.glBindBuffer(GL30.GL_ELEMENT_ARRAY_BUFFER, 0);
 
         Shader shaderHandler = new Shader();
@@ -251,6 +236,7 @@ public class Application {
 
         Matrix4f mvp = new Matrix4f().ortho(0.0f, 1280.0f, 0.0f, 720.0f, -1.0f, 1.0f);
 
+        // Simulate the sorting algorithms
         runSimulation();
 
         // GUI
@@ -269,6 +255,7 @@ public class Application {
                     } else {
                         bubble = false;
                         sorting = false;
+                        reset = false;
                         bubbleFrame = 0;
                     }
                 }
@@ -280,6 +267,7 @@ public class Application {
                     } else {
                         selection = false;
                         sorting = false;
+                        reset = false;
                         selectionFrame = 0;
                     }
                 }
@@ -292,6 +280,7 @@ public class Application {
                     } else {
                         quick = false;
                         sorting = false;
+                        reset = false;
                         quickFrame = 0;
                     }
                 }
@@ -303,6 +292,7 @@ public class Application {
                     } else {
                         merge = false;
                         sorting = false;
+                        reset = false;
                         mergeFrame = 0;
                     }
                 }
@@ -325,22 +315,49 @@ public class Application {
 
             // Bind VBO and dynamically fill it with data
             GL30.glBindBuffer(GL30.GL_ARRAY_BUFFER, vboID);
-            GL30.glBufferSubData(GL30.GL_ARRAY_BUFFER, 0, vboBuffer);
+            //GL30.glBufferSubData(GL30.GL_ARRAY_BUFFER, 0, vboBuffer);
+            GL30.glBufferData(GL30.GL_ARRAY_BUFFER, vboBuffer, GL30.GL_DYNAMIC_DRAW);
 
             // Bind VAO
             GL30.glBindVertexArray(vaoID);
             GL30.glEnableVertexAttribArray(0);
             GL30.glEnableVertexAttribArray(1);
+
+            // Bind IBO and dynamically fill it with data
+            // 768 for 16kb of vertex memory
+            int[] indices = new int[MAX_QUADS * Quad.indicesPerQuad];
+            int offset = 0;
+            for(int i = 0; i < indices.length; i += 6) {
+                indices[i + 0] = 0 + offset;
+                indices[i + 1] = 1 + offset;
+                indices[i + 2] = 2 + offset;
+
+                indices[i + 3] = 2 + offset;
+                indices[i + 4] = 3 + offset;
+                indices[i + 5] = 0 + offset;
+
+                offset += 4;
+            }
+            iboBuffer.put(indices);
+            iboBuffer.flip();
             GL30.glBindBuffer(GL30.GL_ELEMENT_ARRAY_BUFFER, iboID);
+            GL30.glBufferSubData(GL30.GL_ELEMENT_ARRAY_BUFFER, 0, iboBuffer);
+            //GL30.glBufferData(GL30.GL_ELEMENT_ARRAY_BUFFER, iboBuffer, GL30.GL_DYNAMIC_DRAW);
 
             // Draw the vertices
             GL30.glDrawElements(GL30.GL_TRIANGLES, Quad.indicesCount, GL_UNSIGNED_INT, 0);
 
             // Unbind VAO
             GL30.glBindBuffer(GL30.GL_ELEMENT_ARRAY_BUFFER, 0);
+            GL30.glBindBuffer(GL30.GL_ARRAY_BUFFER, 0);
             GL30.glDisableVertexAttribArray(0);
             GL30.glDisableVertexAttribArray(1);
             GL30.glBindVertexArray(0);
+
+            // Clear the VBO
+            vboBuffer.clear();
+            // Clear the IBO
+            iboBuffer.clear();
 
             // GUI
             final double currentTime = glfwGetTime();
@@ -359,27 +376,27 @@ public class Application {
             ImGui.setNextWindowPos(25, 25, ImGuiCond.Once);
             ImGui.begin("Controls");
             if(ImGui.button("Bubble Sort", 125f, 30f)) {
-                if(!sorting) {
+                if(!sorting && reset) {
                     sorting = true;
                     bubble = true;
                 }
             }
             ImGui.sameLine(0f, -1f);
             if(ImGui.button("Selection Sort", 125f, 30f)) {
-                if(!sorting) {
+                if(!sorting && reset) {
                     sorting = true;
                     selection = true;
                 }
             }
             if(ImGui.button("Merge Sort", 125f, 30f)) {
-                if(!sorting) {
+                if(!sorting && reset) {
                     sorting = true;
                     merge = true;;
                 }
             }
             ImGui.sameLine(0f, -1f);
             if(ImGui.button("Quick Sort", 125f, 30f)) {
-                if(!sorting) {
+                if(!sorting && reset) {
                     sorting = true;
                     quick = true;;
                 }
@@ -388,25 +405,27 @@ public class Application {
                 if(!sorting) {
                     resetBars();
                     runSimulation();
+                    reset = true;
                 }
             }
-            /**if(ImGui.button("Randomise Speed", 125f, 30f)) {
+            ImGui.sameLine(0f, -1f);
+            if(ImGui.button("Randomise Speed", 125f, 30f)) {
                 if(!sorting) {
                     barHeights = new ArrayList<>();
                     numBars = random.nextInt(96) + 5;
-                    for(int index = 0; index < numBars; index++) {
+                    for (int index = 0; index < numBars; index++) {
                         barHeights.add(Math.round(random.nextFloat() * 500.0f));
                     }
                     resetBars();
-            }**/
+                    runSimulation();
+                    reset = true;
+                }
+            }
 
             ImGui.end();
 
             ImGui.render();
             imGuiGl3.render(ImGui.getDrawData());
-
-            // Clear the VBO
-            vboBuffer.clear();
 
             shaderHandler.unBindProgram();
 

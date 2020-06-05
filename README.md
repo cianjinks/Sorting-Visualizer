@@ -45,5 +45,5 @@ as the basics of batch rendering in graphics programming.
 
 ## Planned
 
-  - Add more complex algorithms
-  - Abstract algorithm computation to be faster
+  - [x] Add more complex algorithms 
+  - [x] Abstract algorithm computation to be faster
