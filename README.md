@@ -9,7 +9,7 @@ as the basics of batch rendering in graphics programming.
 
 ![Preview Two](docs/example2.jpg)
 
-![Preview Three](docs/example3.jpg)
+![Preview Three](docs/example3.gif)
 
 ## Building
 
