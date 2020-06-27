@@ -5,11 +5,11 @@ as the basics of batch rendering in graphics programming.
 
 ## Preview
 
+![Preview Three](docs/example3.gif)
+
 ![Preview One](docs/example1.jpg)
 
 ![Preview Two](docs/example2.jpg)
-
-![Preview Three](docs/example3.gif)
 
 ## Building
 
